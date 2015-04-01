@@ -42,8 +42,8 @@ create table states_profiles as select state, url from profiles where state is n
 
 
 ALTER TABLE states_profiles CHANGE url profile_url;
-ALTER TABLE states_profiles MODIFY profile_url varchar(100) NOT NULL;
-ALTER TABLE states_profiles MODIFY state text NOT NULL;
+ALTER TABLE states_profiles MODIFY profile_url varchar(100) NOT NULL; -- should be no warning
+ALTER TABLE states_profiles MODIFY state text NOT NULL; -- should be no warning
 
 
 create table state_profile_blog_post_content as
@@ -65,5 +65,5 @@ UPDATE state_profile_blog_post_content
 INNER JOIN posts ON state_profile_blog_post_content.post_url = posts.url
 SET state_profile_blog_post_content.post_content = posts.content;
 
-ALTER TABLE state_profile_blog_post_content MODIFY post_content longtext NOT NULL;
+ALTER TABLE state_profile_blog_post_content MODIFY post_content longtext NOT NULL; -- should be no warning
 
