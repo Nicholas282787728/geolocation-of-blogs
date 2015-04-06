@@ -5,6 +5,7 @@ from stemmer import PorterStemmer
 import math
 import operator
 import csv
+import sys
 from htmllaundry import strip_markup
 
 # input: list of words
@@ -31,6 +32,21 @@ def removeStopwords(input):
     output = [x for x in input if x not in stop_words]
     stopword_file.close()
     return output
+
+
+def stateNamePreprocess(state_name):
+    state_name = state_name.replace(".", "")
+    state_name = state_name.replace(" ", "")
+    state_name = state_name.upper()
+
+    if state_name == 'VIRGINIA':
+        state_name = 'VA'
+
+    if state_name == 'SOUTHDAKOTA':
+        state_name = 'SD'
+
+    return state_name
+
 
 # input: list of classes (50 states)
 # output: metadata struct
@@ -95,14 +111,79 @@ def main():
     parser.add_argument('input', nargs=1)
     args = parser.parse_args()
 
-    with open('myblogs.csv', 'rb') as csvfile:
+    US_state_set = set(['WA', 'DE', 'WI', 'WV', 'HI', 'FL', 'WY', 'NH', 'KS', 'NJ', 'NM', 'TX', 'LA', 'NC', 'ND', 'NE', 'TN', 'NY', 'PA', 'RI', 'NV', 'VA', 'CO', 'CA', 'AL', 'AR', 'VT', 'IL', 'GA', 'IN', 'IA', 'MA', 'AZ', 'ID', 'CT', 'ME', 'MD', 'OK', 'OH', 'UT', 'MO', 'MN', 'MI', 'AK', 'MT', 'MS', 'SC', 'KY', 'OR', 'SD'])
+    US_state_list = list(US_state_set)
+    metadata = initializeNaiveBayes(US_state_list)
+
+    #############################################################
+    ######################## Training ###########################
+    #############################################################
+
+    decode_success_count = 0
+    decode_failure_count = 0
+
+    with open('train.csv', 'rb') as csvfile:
+        csv.field_size_limit(sys.maxsize)
         spamreader = csv.reader(csvfile, delimiter=',')
         for row in spamreader:
-            post =  ' || '.join(row)
-            print strip_markup(post)
+            try:
+                current_state = stateNamePreprocess(row[0])
+                lower_content = row[4].lower()
+                content = strip_markup(lower_content)
+                files = re.findall(r'[a-zA-Z\']+',content)
+
+                trainNaiveBayes(files, current_state, metadata)
+                decode_success_count += 1
+
+                if decode_success_count % 1000 == 0:
+                    print "Processing %d training data" % decode_success_count
+            except:
+                decode_failure_count += 1
+
+    # print decode_success_count
+    # print decode_failure_count
 
 
+    #############################################################
+    ######################## Testing  ###########################
+    #############################################################
 
+    decode_failure_test_count = 0
+    decode_success_test_count = 0
+    predict_correct_count = 0
+
+    with open('test.csv', 'rb') as csvfile:
+        csv.field_size_limit(sys.maxsize)
+        spamreader = csv.reader(csvfile, delimiter=',')
+        for row in spamreader:
+            try:
+                current_state = stateNamePreprocess(row[0])
+                lower_content = row[4].lower()
+                content = strip_markup(lower_content)
+                files = re.findall(r'[a-zA-Z\']+',content)
+
+                predicted_state = testNaiveBayes(files, US_state_list, metadata)
+
+                decode_success_test_count += 1
+                if predicted_state == current_state:
+                    predict_correct_count += 1
+
+                if decode_success_test_count % 1000 == 0:
+                    print "Processing %d testing data" % decode_success_test_count
+                    print "predict_correct_count:", predict_correct_count
+
+                if decode_success_test_count == 10000:
+                    break
+
+            except:
+                decode_failure_test_count += 1
+
+    test_accuracy = float(predict_correct_count)/ float(decode_success_test_count)
+
+    print "decode_success_test_count:", decode_success_test_count
+    print "predict_correct_count:", predict_correct_count
+    print "Accuracy ", test_accuracy
+    # print decode_failure_test_count
 
 if __name__ == '__main__':
     main()
