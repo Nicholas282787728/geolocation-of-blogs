@@ -74,6 +74,15 @@ def initializeNaiveBayes(class_list):
 
     return metadata
 
+
+def initializeTestStats(class_list):
+    metadata = dict()
+    for class_name in class_list:
+        metadata[class_name] = [0,0,0]
+
+    return metadata
+
+
 # input: list_of_words, class
 # train one post and update metadata
 def trainNaiveBayes(list_of_words, class_name, metadata):
@@ -132,6 +141,10 @@ def main():
                 content = strip_markup(lower_content)
                 files = re.findall(r'[a-zA-Z\']+',content)
 
+                files = [x for x in files if x != "nbsp"]
+
+                files = removeStopwords(files)
+
                 trainNaiveBayes(files, current_state, metadata)
                 decode_success_count += 1
 
@@ -152,6 +165,8 @@ def main():
     decode_success_test_count = 0
     predict_correct_count = 0
 
+    testing_stats = initializeTestStats(US_state_list)
+
     with open('test.csv', 'rb') as csvfile:
         csv.field_size_limit(sys.maxsize)
         spamreader = csv.reader(csvfile, delimiter=',')
@@ -162,18 +177,27 @@ def main():
                 content = strip_markup(lower_content)
                 files = re.findall(r'[a-zA-Z\']+',content)
 
+                files = [x for x in files if x != "nbsp"]
+
+                files = removeStopwords(files)
+
                 predicted_state = testNaiveBayes(files, US_state_list, metadata)
 
                 decode_success_test_count += 1
+                testing_stats[current_state][1] += 1
+
+                testing_stats[predicted_state][2] += 1
+
                 if predicted_state == current_state:
                     predict_correct_count += 1
+                    testing_stats[current_state][0] += 1
 
                 if decode_success_test_count % 1000 == 0:
                     print "Processing %d testing data" % decode_success_test_count
                     print "predict_correct_count:", predict_correct_count
 
-                if decode_success_test_count == 10000:
-                    break
+                # if decode_success_test_count == 2000:
+                #     break
 
             except:
                 decode_failure_test_count += 1
@@ -184,6 +208,12 @@ def main():
     print "predict_correct_count:", predict_correct_count
     print "Accuracy ", test_accuracy
     # print decode_failure_test_count
+
+    for state in testing_stats:
+        if testing_stats[state][1] != 0:
+            print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2], float(testing_stats[state][0])/float(testing_stats[state][1])
+        else:
+            print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2]
 
 if __name__ == '__main__':
     main()
