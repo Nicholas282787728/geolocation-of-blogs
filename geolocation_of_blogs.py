@@ -7,6 +7,11 @@ import operator
 import csv
 import sys
 from htmllaundry import strip_markup
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.svm import LinearSVC
+
+def mytokenizer(document):
+    return re.findall(r'[a-zA-Z\']+', document)
 
 # input: list of words
 # output: list of words
@@ -115,7 +120,7 @@ def testNaiveBayes(list_of_words, class_list, metadata):
     return max(class_prob.iteritems(), key=operator.itemgetter(1))[0]
 
 
-def main():
+def naiveBayes():
     parser = argparse.ArgumentParser()
     parser.add_argument('input', nargs=1)
     args = parser.parse_args()
@@ -214,6 +219,89 @@ def main():
             print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2], float(testing_stats[state][0])/float(testing_stats[state][1])
         else:
             print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2]
+
+def SVM():
+    corpus = []
+    label = []
+
+    decode_failure_count = 0
+
+    with open('train.csv', 'rb') as csvfile:
+        csv.field_size_limit(sys.maxsize)
+        spamreader = csv.reader(csvfile, delimiter=',')
+        for row in spamreader:
+            try:
+                current_state = stateNamePreprocess(row[0])
+                lower_content = row[4].lower()
+                content = strip_markup(lower_content)
+                content = content.encode('ascii','ignore')
+                corpus.append(content)
+                label.append(current_state)
+
+            except:
+                decode_failure_count += 1
+
+    print "decode_failure_count: ", decode_failure_count
+    print len(corpus)
+    print len(label)
+
+    vectorizer = TfidfVectorizer(tokenizer = mytokenizer)
+
+    lin_clf = LinearSVC()
+    print "Processing TfidfVectorizer fit_transform"
+    X = vectorizer.fit_transform(corpus)
+    print "Processing lin_clf.fit(X, label)"
+    lin_clf.fit(X, label)
+
+    ####################################################################
+    ####################################################################
+
+    print "Processing test data"
+
+    test_corpus = []
+    test_label = []
+    test_decode_failure_count = 0
+
+    with open('test.csv', 'rb') as csvfile:
+        csv.field_size_limit(sys.maxsize)
+        spamreader = csv.reader(csvfile, delimiter=',')
+        for row in spamreader:
+            try:
+                current_state = stateNamePreprocess(row[0])
+                lower_content = row[4].lower()
+                content = strip_markup(lower_content)
+                content = content.encode('ascii','ignore')
+                test_corpus.append(content)
+                test_label.append(current_state)
+
+            except:
+                test_decode_failure_count += 1
+
+    print "test_decode_failure_count: ", test_decode_failure_count
+
+    print "Processing testX = vectorizer.transform(test_corpus)"
+    testX = vectorizer.transform(test_corpus)
+    print "Processing Predict"
+    result = lin_clf.predict(testX)
+
+
+    index = 0
+    correct_count = 0
+    incorrect_count = 0
+
+
+    for result_row in result:
+        if result_row == test_label[index]:
+            correct_count += 1
+        else:
+            incorrect_count += 1
+        index += 1
+
+    print "accuracy", float(correct_count)/float(correct_count+incorrect_count)
+
+
+def main():
+    SVM()
 
 if __name__ == '__main__':
     main()
