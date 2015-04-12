@@ -1,47 +1,48 @@
--- 
--- This script creates 3 new tables in addition to 6 original tables.
--- 
--- Original tables:
--- +-------------------------+--------------------+
--- | Tables_in_myblogs       | Number of rows 	  |
--- +-------------------------+--------------------+
--- | blogs                   | 12,562			  |
--- | blogs_posts             | 2,303,343		  |
--- | posts                   | 2,303,755		  |
--- | profiles                | 6,750			  |
--- | profiles_blogs          | 13,665			  |
--- | profiles_blogs_followed | 121,094			  |
--- +-------------------------+--------------------+
--- 
--- New tables:
--- 1. states_profiles
--- +-------------+--------------+------+-----+---------+-------+
--- | Field       | Type         | Null | Key | Default | Extra |
--- +-------------+--------------+------+-----+---------+-------+
--- | profile_url | varchar(100) | NO   |     | NULL    |       |
--- | state       | text         | NO   |     | NULL    |       |
--- +-------------+--------------+------+-----+---------+-------+
--- 2. team_blogs
--- +----------+--------------+------+-----+---------+-------+
--- | Field    | Type         | Null | Key | Default | Extra |
--- +----------+--------------+------+-----+---------+-------+
--- | blog_url | varchar(100) | NO   |     |         |       |
--- +----------+--------------+------+-----+---------+-------+
--- 3. state_profile_blog_post_content
--- +--------------+--------------+------+-----+---------+-------+
--- | Field        | Type         | Null | Key | Default | Extra |
--- +--------------+--------------+------+-----+---------+-------+
--- | state        | text         | NO   |     | NULL    |       |
--- | profile_url  | varchar(100) | NO   |     | NULL    |       |
--- | blog_url     | varchar(100) | NO   |     |         |       |
--- | post_url     | varchar(500) | NO   |     |         |       |
--- | post_content | longtext     | NO   |     | NULL    |       |
--- +--------------+--------------+------+-----+---------+-------+
+/*
+This script creates 3 new tables in addition to 6 original tables.
+
+Original tables:
++-------------------------+--------------------+
+| Tables_in_myblogs       | Number of rows 	  |
++-------------------------+--------------------+
+| blogs                   | 12,562			  |
+| blogs_posts             | 2,303,343		  |
+| posts                   | 2,303,755		  |
+| profiles                | 6,750			  |
+| profiles_blogs          | 13,665			  |
+| profiles_blogs_followed | 121,094			  |
++-------------------------+--------------------+
+
+New tables:
+1. states_profiles
++-------------+--------------+------+-----+---------+-------+
+| Field       | Type         | Null | Key | Default | Extra |
++-------------+--------------+------+-----+---------+-------+
+| profile_url | varchar(100) | NO   |     | NULL    |       |
+| state       | text         | NO   |     | NULL    |       |
++-------------+--------------+------+-----+---------+-------+
+2. team_blogs
++----------+--------------+------+-----+---------+-------+
+| Field    | Type         | Null | Key | Default | Extra |
++----------+--------------+------+-----+---------+-------+
+| blog_url | varchar(100) | NO   |     |         |       |
++----------+--------------+------+-----+---------+-------+
+3. state_profile_blog_post_content
++--------------+--------------+------+-----+---------+-------+
+| Field        | Type         | Null | Key | Default | Extra |
++--------------+--------------+------+-----+---------+-------+
+| state        | text         | NO   |     | NULL    |       |
+| profile_url  | varchar(100) | NO   |     | NULL    |       |
+| blog_url     | varchar(100) | NO   |     |         |       |
+| post_url     | varchar(500) | NO   |     |         |       |
+| post_content | longtext     | NO   |     | NULL    |       |
++--------------+--------------+------+-----+---------+-------+
+*/
 
 create table states_profiles as select state, url from profiles where state is not null and country = 'United States';
 
 
-ALTER TABLE states_profiles CHANGE url profile_url;
+ALTER TABLE states_profiles CHANGE url profile_url varchar(100);
 ALTER TABLE states_profiles MODIFY profile_url varchar(100) NOT NULL; -- should be no warning
 ALTER TABLE states_profiles MODIFY state text NOT NULL; -- should be no warning
 
@@ -67,3 +68,25 @@ SET state_profile_blog_post_content.post_content = posts.content;
 
 ALTER TABLE state_profile_blog_post_content MODIFY post_content longtext NOT NULL; -- should be no warning
 
+
+-- alternative solution
+
+
+create table team_posts as
+select BP.post_url
+from team_blogs TB, blogs_posts BP
+where TB.blog_url = BP.blog_url;
+
+
+create table state_profile_post_content as
+select SP.state, SP.profile_url, P.url, P.content 
+from states_profiles SP, posts P
+where
+	SP.profile_url = P.author_url and
+	P.url not in (select post_url from team_posts);
+
+
+
+
+
+	
