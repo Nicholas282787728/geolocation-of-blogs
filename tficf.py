@@ -13,39 +13,6 @@ from geolocation_of_blogs import *
 from collections import OrderedDict
 from operator import itemgetter, attrgetter, methodcaller
 
-## input: string 
-## output: list of words
-def tokenizeText(string): 
-    string = re.sub('i\'m', ' i am ', string) # i'm => i am
-    string = re.sub('you\'re', ' you are ', string) # you're => you are    
-    string = re.sub('he\'s', ' he is ', string) # he's => he is
-    string = re.sub('she\'s', ' she is ', string) # she's => he is
-    string = re.sub('she\'s', ' she is ', string) # she's => he is
-    string = re.sub('i\'ve', ' i have ', string) # i've => i have
-    string = re.sub('haven\'t', ' have not ', string) # haven't => have not 
-    string = re.sub('hasn\'t', ' has not ', string) # hasn't => has not 
-    string = re.sub('\'s', ' \'s ', string) # saturday's =>saturday 's
-    wordlist = re.findall('\d+,\s\d+,\s\d+',string) 
-    string = re.sub('\d+,\s\d+,\s\d+', ' ',string) 
-    wordlist += re.findall('\w+\.\s\w+\.\s\w+\.*',string) 
-    string = re.sub('\w+\.\s\w+\.\s\w+\.*', ' ',string) 
-    string = re.sub('\s+[/.,-]+\s+', ' ', string)  
-    string = re.sub('[/.-]+\s+', ' ', string)
-    string = re.sub('\s+[/.-]+', ' ', string)
-    string = re.sub('[/.,-]+\s+', ' ', string)
-    string = re.sub('\s+[/.,-]+', ' ', string) 
-    string = re.sub('\s+\.+', ' ', string)   
-    string = re.sub('\.+\s+', ' ', string)   
-    string = re.sub('\s+\,+', ' ', string)   
-    string = re.sub('\,+\s+', ' ', string)   
-    string = re.sub('\.$', ' ', string)
-    string = re.sub('\,\s', ' ', string)    
-    string = string .strip()    
-    wordlist1 = re.split('\s+', string)
-    wordlist += wordlist1
-    
-    return wordlist
-
 ## input: string filePath, float rankPercentage (0.0 - 1.0)
 ## output: list of words
 ## EX: ('train.csv', 0.5) will return top 50% of words ranked by icf then tf in decreasing order
