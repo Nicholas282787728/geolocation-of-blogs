@@ -22,7 +22,8 @@ def tficf(filePath, rankPercentage):
     
     word_dict = {}
     decode_failure_count = 0
-
+    
+    count = 1
     with open(filePath, 'rb') as csvfile:
         csv.field_size_limit(sys.maxsize)
         spamreader = csv.reader(csvfile, delimiter=',')
@@ -30,14 +31,16 @@ def tficf(filePath, rankPercentage):
             try:
                 wordlist = []
                 current_state = stateNamePreprocess(row[0])
-                lower_content = row[4].lower()
+                lower_content = row[3].lower()
                 content = strip_markup(lower_content)                 
                 content = content.encode('ascii','ignore')
                 wordlist = mytokenizer(content)
                 
                 for word in wordlist:
                     if word not in word_dict:
-                        metadata = [1, 1, set(current_state)]
+                        state_set = set()
+                        state_set.add(current_state)
+                        metadata = [1, 1, state_set]
                         word_dict[word] = metadata
                     else:
                         word_dict[word][0] += 1
@@ -46,8 +49,14 @@ def tficf(filePath, rankPercentage):
                             word_dict[word][2].add(current_state)            
             except:
                 decode_failure_count += 1
+    small_tf = []
     
-    small_tf = [k for k,v in word_dict.iteritems() if v < 5]
+    for k,v in word_dict.iteritems():
+        if v[0] < 10:
+            small_tf.append(k)
+        elif len(k) < 2:
+            small_tf.append(k)
+
     for k in small_tf:
         del word_dict[k]
 
@@ -56,10 +65,14 @@ def tficf(filePath, rankPercentage):
     
     ordered_word_dict = OrderedDict(sorted(word_dict.items(), key=lambda x: (x[1][1], x[1][0]), reverse=True))
     
-    #count = 1
-    #for key in ordered_word_dict:
-    #    print "tf = %d  \t icf = %f \t %s" % (ordered_word_dict[key][0], ordered_word_dict[key][1], key) 
-    #    count += 1
+    print "Top 100 words:"
+    count = 1
+    for key in ordered_word_dict:
+        print "tf = %d  \t icf = %f \t %s" % (ordered_word_dict[key][0], ordered_word_dict[key][1], key), "\t\t",ordered_word_dict[key][2] 
+        count += 1
+        if count > 100:
+            break
+
 
     ordered_word_list = ordered_word_dict.keys()
     
@@ -67,7 +80,7 @@ def tficf(filePath, rankPercentage):
 
 
 def main():
-    wordlist = tficf('train.csv', 0.5)
+    wordlist = tficf('test.csv', 0.5)
 
 
 if __name__ == '__main__':
