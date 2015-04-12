@@ -47,6 +47,10 @@ def tficf(filePath, rankPercentage):
             except:
                 decode_failure_count += 1
     
+    small_tf = [k for k,v in word_dict.iteritems() if v < 5]
+    for k in small_tf:
+        del word_dict[k]
+
     for key in word_dict:
         word_dict[key][1] = float(50) / float(word_dict[key][1])
     

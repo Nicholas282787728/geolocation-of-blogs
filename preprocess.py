@@ -33,7 +33,7 @@ def main():
 
     count = 0
 
-    with open('myblogs_v2.csv', 'rb') as csvfile:
+    with open('myblogs.csv', 'rb') as csvfile:
         csv.field_size_limit(sys.maxsize)
         spamreader = csv.reader(csvfile, delimiter=',')
         for row in spamreader:
@@ -46,6 +46,9 @@ def main():
             # else:
             #     state_author_dict[current_state] = set()
             #     state_author_dict[current_state].add(row[1])
+            
+            if current_state not in US_state_set:
+                continue
 
             if current_state in state_test_author_dict:
                 if current_author in state_test_author_dict[current_state]:
