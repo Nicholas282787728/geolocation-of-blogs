@@ -142,7 +142,7 @@ def naiveBayes():
         for row in spamreader:
             try:
                 current_state = stateNamePreprocess(row[0])
-                lower_content = row[4].lower()
+                lower_content = row[3].lower()
                 content = strip_markup(lower_content)
                 files = re.findall(r'[a-zA-Z\']+',content)
 
@@ -178,7 +178,7 @@ def naiveBayes():
         for row in spamreader:
             try:
                 current_state = stateNamePreprocess(row[0])
-                lower_content = row[4].lower()
+                lower_content = row[3].lower()
                 content = strip_markup(lower_content)
                 files = re.findall(r'[a-zA-Z\']+',content)
 
@@ -225,6 +225,8 @@ def SVM():
     label = []
 
     decode_failure_count = 0
+    
+    print "Processing training data" 
 
     with open('train.csv', 'rb') as csvfile:
         csv.field_size_limit(sys.maxsize)
@@ -232,7 +234,7 @@ def SVM():
         for row in spamreader:
             try:
                 current_state = stateNamePreprocess(row[0])
-                lower_content = row[4].lower()
+                lower_content = row[3].lower()
                 content = strip_markup(lower_content)
                 content = content.encode('ascii','ignore')
                 corpus.append(content)
@@ -268,7 +270,7 @@ def SVM():
         for row in spamreader:
             try:
                 current_state = stateNamePreprocess(row[0])
-                lower_content = row[4].lower()
+                lower_content = row[3].lower()
                 content = strip_markup(lower_content)
                 content = content.encode('ascii','ignore')
                 test_corpus.append(content)
@@ -288,7 +290,6 @@ def SVM():
     index = 0
     correct_count = 0
     incorrect_count = 0
-
 
     for result_row in result:
         if result_row == test_label[index]:
