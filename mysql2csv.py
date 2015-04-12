@@ -6,7 +6,7 @@ import json
 con = mdb.connect('localhost', 'root', '', 'myblogs');
 cur = con.cursor()
 
-query = "SELECT * FROM state_profile_blog_post_content"
+query = "SELECT * FROM state_profile_post_content"
 cur.execute(query)
 rows = cur.fetchall()
 
@@ -22,6 +22,6 @@ csv_outFile.close()
 
 
 # with open('myblogs.csv', 'rb') as csvfile:
-#     spamreader = csv.reader(csvfile, delimiter=',')
-#     for row in spamreader:
+#     csvreader = csv.reader(csvfile, delimiter=',')
+#     for row in csvreader:
 #         print ' || '.join(row)
