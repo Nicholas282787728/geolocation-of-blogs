@@ -2,7 +2,7 @@
 Usage: 
 	python extractLIWs.py
 '''
-# For each state, extract top 10 location indicative words (LIWs) using 
+# For each state, extract top 20 location indicative words (LIWs) using 
 # chi-squared statistcs. Words with frequency less than ten are removed.
 
 import json
@@ -27,7 +27,7 @@ def countWords(word_list, state, data):
 def extractLIWs():
 
 	remove_stopwords = True
-	stem = False
+	stem = True
 
 	p_stemmer = PorterStemmer()
 
@@ -66,9 +66,8 @@ def extractLIWs():
 		for row in csvreader:
 			try:
 				current_state = stateNamePreprocess(row[0])
-				lower_content = row[4].lower()
+				lower_content = row[3].lower()
 				content = strip_markup(lower_content)
-
 				files = re.findall(r'[a-zA-Z\']+',content)
 				files = [x for x in files if x != "nbsp"]
 
@@ -92,6 +91,11 @@ def extractLIWs():
 	print "decode_success_count = ", decode_success_count
 	print "decode_failure_count = ", decode_failure_count
 
+	# print "state_count = "
+	# print state_count
+	# print "empty_state_count = "
+	# print empty_state_count
+
 	########################
 	# calculate chi_square #
 	########################
@@ -107,14 +111,14 @@ def extractLIWs():
 	N = sum( data["length_per_state"].values() )
 	for state in US_state_list:
 		for word in data["word_count_per_state"][state]:
-			if data["word_count"][word] > 10:
+			if data["word_count"][word] > 10 and len(word) > 1:
 				O = data["word_count_per_state"][state][word]
 				E = float(data["word_count"][word]) * float(data["length_per_state"][state]) / N
 				data["chi_square"][state][word] = ( O - E ) ** 2 / E
 
 		sorted_chi_square = sorted(data["chi_square"][state].items(), key=lambda x: x[1], reverse=True)
 		print ">> State: ", state, "(", US_state_map[state], ")"
-		for i in range( min(10, len(sorted_chi_square) ) ):
+		for i in range( min(20, len(sorted_chi_square) ) ):
 			print sorted_chi_square[i][0], sorted_chi_square[i][1]
 
 
