@@ -9,9 +9,12 @@ import sys
 from htmllaundry import strip_markup
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import LinearSVC
+from tficf import * 
+
 
 def mytokenizer(document):
     return re.findall(r'[a-zA-Z\']+', document)
+
 
 # input: list of words
 # output: list of words
@@ -220,7 +223,13 @@ def naiveBayes():
         else:
             print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2]
 
-def SVM():
+## input: 
+## method = tficf or chi or igr
+## percentage = 0.0 - 1.0
+## output:
+## accuracy
+
+def SVM(method, percentage):
     corpus = []
     label = []
 
@@ -237,6 +246,8 @@ def SVM():
                 lower_content = row[3].lower()
                 content = strip_markup(lower_content)
                 content = content.encode('ascii','ignore')
+                
+                
                 corpus.append(content)
                 label.append(current_state)
 
@@ -246,8 +257,13 @@ def SVM():
     print "decode_failure_count: ", decode_failure_count
     print len(corpus)
     print len(label)
-
-    vectorizer = TfidfVectorizer(tokenizer = mytokenizer)
+    
+    if method == 'tficf': 
+        vectorizer = TfidfVectorizer(tokenizer = mytokenizer, vocabulary = tficf('train.csv', percentage))
+    elif method == 'igr':
+        vectorizer = TfidfVectorizer(tokenizer = mytokenizer, vocabulary = igr('train.csv', percentage))
+    elif method == 'chi':
+        vectorizer = TfidfVectorizer(tokenizer = mytokenizer, vocabulary = chi('train.csv', percentage))
 
     lin_clf = LinearSVC()
     print "Processing TfidfVectorizer fit_transform"
@@ -297,12 +313,19 @@ def SVM():
         else:
             incorrect_count += 1
         index += 1
-
-    print "accuracy", float(correct_count)/float(correct_count+incorrect_count)
-
+    
+    return float(correct_count)/float(correct_count+incorrect_count)
 
 def main():
-    SVM()
+    outputFile = open("output.txt", "w") 
+    outputFile.write("tficf:")
+    for i in range(85,100, 5):
+        percentage = float(i) / float(100)
+        print 'tficf percentage = %f' % (percentage)
+        accuracy = SVM('tficf', percentage)
+        print 'percentage = %f \t accuracy = %f' % (percentage, accuracy)
+        outputFile.write('percentage = %f \t accuracy = %f' % (percentage, accuracy))
 
+    outputFile.close()
 if __name__ == '__main__':
     main()
