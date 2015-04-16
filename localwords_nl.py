@@ -1,11 +1,11 @@
 from __future__ import division
 import json
 from stemmer import PorterStemmer
-#from geolocation_of_blogs import stateNamePreprocess
 from math import log
 import sys
+import re
 import csv
-
+from htmllaundry import strip_markup
 
 def stateNamePreprocess(state_name):
     state_name = state_name.replace(".", "")
@@ -33,23 +33,23 @@ def calculate_prob(data,stopwords,US_state_list):
     prob_words = {}
     freq_stopwords = {}
 
-    for w in data['word_count']:
-        prob_words[w] = {}
+    for word in data['word_count']:
+        prob_words[word] = {}
         for state in US_state_list:
             #add one smoothing
-            prob_words[w][state] = data['word_count_per_state'][word].get(state,1) / (data['word_count'][word] + len(US_state_list))
-    
+            prob_words[word][state] = (data['word_count_per_state'][word].get(state,0) + 1)/ (data['word_count'][word] + len(US_state_list))
+ 
     freq_total = 0
     for s in stopwords:
         freq_total += data['word_count'].get(s,0)
     for s in stopwords:
         freq_stopwords[s] = data['word_count'].get(s,0) / freq_total
 
-
     return prob_words, freq_stopwords
 
 def sim_SKL(w,s,prob_words,US_state_list):
     sim = 0
+
     for state in US_state_list:
         sim += prob_words[w][state] * log(prob_words[w][state]/prob_words[s][state])
         sim += prob_words[s][state] * log(prob_words[s][state]/prob_words[w][state])
@@ -57,7 +57,6 @@ def sim_SKL(w,s,prob_words,US_state_list):
 
 def localwords_NL():
 
-    remove_stopwords = False
     stem = True
 
     p_stemmer = PorterStemmer()
@@ -66,10 +65,13 @@ def localwords_NL():
     US_state_set = set(['WA', 'DE', 'WI', 'WV', 'HI', 'FL', 'WY', 'NH', 'KS', 'NJ', 'NM', 'TX', 'LA', 'NC', 'ND', 'NE', 'TN', 'NY', 'PA', 'RI', 'NV', 'VA', 'CO', 'CA', 'AL', 'AR', 'VT', 'IL', 'GA', 'IN', 'IA', 'MA', 'AZ', 'ID', 'CT', 'ME', 'MD', 'OK', 'OH', 'UT', 'MO', 'MN', 'MI', 'AK', 'MT', 'MS', 'SC', 'KY', 'OR', 'SD'])
     US_state_list = list(US_state_set)
 
+
     # read stopword list
     f = open('stopword.txt')
     stopwords = f.read()
     stopwords = stopwords.strip().split()
+    if stem:
+        stopwords = [p_stemmer.stem(s,0,len(s)-1) for s in stopwords]
 
     # initialize data 
     data = {}
@@ -86,7 +88,7 @@ def localwords_NL():
     decode_success_count = 0
     decode_failure_count = 0
 
-    with open('train.csv', 'rb') as csvfile:
+    with open('/media/SeagateDrive/EECS498/train.csv', 'rb') as csvfile:
         csv.field_size_limit(sys.maxsize)
         csvreader = csv.reader(csvfile, delimiter=',')
 	for row in csvreader:
@@ -96,7 +98,6 @@ def localwords_NL():
 		content = strip_markup(lower_content)
 		files = re.findall(r'[a-zA-Z\']+',content)
 		files = [x for x in files if x != "nbsp"]
-
 		if stem:
                     files = [ p_stemmer.stem(token, 0, len(token)-1) for token in files ]
 
@@ -116,10 +117,9 @@ def localwords_NL():
     print "decode_success_count = ", decode_success_count
     print "decode_failure_count = ", decode_failure_count
 
-    sys.exit(0)
 
     # calculate probability, stopwords freq
-    prob_words,freq_stopwords = calculate_prob(data,stopwords)
+    prob_words,freq_stopwords = calculate_prob(data,stopwords,US_state_list)
 
     # calculate Non-Localness
     non_localness = {}
@@ -130,11 +130,15 @@ def localwords_NL():
             non_localness[w] += freq_stopwords[s] * sim_SKL(w,s,prob_words,US_state_list)
 
     #pickup words with smallest NL
-    words_sorted = sorted(non_localness,key=non_localness.get)
-    for w in words_sorted:
+    words_sorted = sorted(non_localness,key=non_localness.get,reverse=True)
+    for w in words_sorted[:50]:
+        if w in stopwords:
+            continue
+        if data['word_count'][w] < 50:
+            continue
         print w
     return words_sorted
 
+    
 if __name__ == '__main__':
     localwords_NL()
-
