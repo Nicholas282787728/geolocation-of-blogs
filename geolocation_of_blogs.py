@@ -9,7 +9,7 @@ import sys
 from htmllaundry import strip_markup
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import LinearSVC
-from tficf import * 
+from tficf import *
 
 
 def mytokenizer(document):
@@ -165,6 +165,12 @@ def naiveBayes():
     # print decode_failure_count
 
 
+    # for state_name in US_state_list:
+    #     current_dict = metadata["class_dict"][state_name]["class_word_count"]
+    #     result = sorted(current_dict.items(), key=lambda t: (-t[1],t[0]))
+    #     print state_name, result[:10]
+
+
     #############################################################
     ######################## Testing  ###########################
     #############################################################
@@ -218,24 +224,31 @@ def naiveBayes():
     # print decode_failure_test_count
 
     for state in testing_stats:
-        if testing_stats[state][1] != 0:
-            print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2], float(testing_stats[state][0])/float(testing_stats[state][1])
+        if testing_stats[state][1] != 0 and testing_stats[state][2] != 0:
+            print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2], float(testing_stats[state][0])/float(testing_stats[state][1]), float(testing_stats[state][0])/float(testing_stats[state][2])
+        elif testing_stats[state][1] != 0:
+            print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2], float(testing_stats[state][0])/float(testing_stats[state][1]), "NA"
         else:
-            print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2]
+            print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2], "NA", "NA"
 
-## input: 
+
+
+## input:
 ## method = tficf or chi or igr
 ## percentage = 0.0 - 1.0
 ## output:
 ## accuracy
 
-def SVM(method, percentage):
+def SVM(method = "original", percentage = 0):
     corpus = []
     label = []
 
+    US_state_set = set(['WA', 'DE', 'WI', 'WV', 'HI', 'FL', 'WY', 'NH', 'KS', 'NJ', 'NM', 'TX', 'LA', 'NC', 'ND', 'NE', 'TN', 'NY', 'PA', 'RI', 'NV', 'VA', 'CO', 'CA', 'AL', 'AR', 'VT', 'IL', 'GA', 'IN', 'IA', 'MA', 'AZ', 'ID', 'CT', 'ME', 'MD', 'OK', 'OH', 'UT', 'MO', 'MN', 'MI', 'AK', 'MT', 'MS', 'SC', 'KY', 'OR', 'SD'])
+    US_state_list = list(US_state_set)
+
     decode_failure_count = 0
-    
-    print "Processing training data" 
+
+    print "Processing training data"
 
     with open('train.csv', 'rb') as csvfile:
         csv.field_size_limit(sys.maxsize)
@@ -246,8 +259,8 @@ def SVM(method, percentage):
                 lower_content = row[3].lower()
                 content = strip_markup(lower_content)
                 content = content.encode('ascii','ignore')
-                
-                
+
+
                 corpus.append(content)
                 label.append(current_state)
 
@@ -257,13 +270,15 @@ def SVM(method, percentage):
     print "decode_failure_count: ", decode_failure_count
     print len(corpus)
     print len(label)
-    
-    if method == 'tficf': 
+
+    if method == 'tficf':
         vectorizer = TfidfVectorizer(tokenizer = mytokenizer, vocabulary = tficf('train.csv', percentage))
     elif method == 'igr':
         vectorizer = TfidfVectorizer(tokenizer = mytokenizer, vocabulary = igr('train.csv', percentage))
     elif method == 'chi':
         vectorizer = TfidfVectorizer(tokenizer = mytokenizer, vocabulary = chi('train.csv', percentage))
+    else:
+        vectorizer = TfidfVectorizer(tokenizer = mytokenizer)
 
     lin_clf = LinearSVC()
     print "Processing TfidfVectorizer fit_transform"
@@ -307,25 +322,45 @@ def SVM(method, percentage):
     correct_count = 0
     incorrect_count = 0
 
+
+    testing_stats = initializeTestStats(US_state_list)
+
     for result_row in result:
+        testing_stats[result_row][2] += 1
+        testing_stats[test_label[index]][1] += 1
+
         if result_row == test_label[index]:
             correct_count += 1
+            testing_stats[test_label[index]][0] += 1
         else:
             incorrect_count += 1
         index += 1
-    
+
+
+    for state in testing_stats:
+        if testing_stats[state][1] != 0 and testing_stats[state][2] != 0:
+            print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2], float(testing_stats[state][0])/float(testing_stats[state][1]), float(testing_stats[state][0])/float(testing_stats[state][2])
+        elif testing_stats[state][1] != 0:
+            print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2], float(testing_stats[state][0])/float(testing_stats[state][1]), "NA"
+        else:
+            print state, testing_stats[state][0], testing_stats[state][1], testing_stats[state][2], "NA", "NA"
+
     return float(correct_count)/float(correct_count+incorrect_count)
 
 def main():
-    outputFile = open("output.txt", "w") 
-    outputFile.write("tficf:")
-    for i in range(85,100, 5):
-        percentage = float(i) / float(100)
-        print 'tficf percentage = %f' % (percentage)
-        accuracy = SVM('tficf', percentage)
-        print 'percentage = %f \t accuracy = %f' % (percentage, accuracy)
-        outputFile.write('percentage = %f \t accuracy = %f' % (percentage, accuracy))
+    # naiveBayes()
+    result = SVM()
+    print result
 
-    outputFile.close()
+    # outputFile = open("output.txt", "w")
+    # outputFile.write("tficf:")
+    # for i in range(85,100, 5):
+    #     percentage = float(i) / float(100)
+    #     print 'tficf percentage = %f' % (percentage)
+    #     accuracy = SVM('tficf', percentage)
+    #     print 'percentage = %f \t accuracy = %f' % (percentage, accuracy)
+    #     outputFile.write('percentage = %f \t accuracy = %f' % (percentage, accuracy))
+
+    # outputFile.close()
 if __name__ == '__main__':
     main()
