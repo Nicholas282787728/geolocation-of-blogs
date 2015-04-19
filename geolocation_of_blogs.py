@@ -10,6 +10,7 @@ from htmllaundry import strip_markup
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import LinearSVC
 from tficf import *
+from chiSquareLIW import *
 
 
 def mytokenizer(document):
@@ -259,10 +260,9 @@ def SVM(method = "original", percentage = 0):
                 lower_content = row[3].lower()
                 content = strip_markup(lower_content)
                 content = content.encode('ascii','ignore')
-
-
-                corpus.append(content)
-                label.append(current_state)
+                if len(content) != 0:
+                    corpus.append(content)
+                    label.append(current_state)
 
             except:
                 decode_failure_count += 1
@@ -276,7 +276,7 @@ def SVM(method = "original", percentage = 0):
     elif method == 'igr':
         vectorizer = TfidfVectorizer(tokenizer = mytokenizer, vocabulary = igr('train.csv', percentage))
     elif method == 'chi':
-        vectorizer = TfidfVectorizer(tokenizer = mytokenizer, vocabulary = chi('train.csv', percentage))
+        vectorizer = TfidfVectorizer(tokenizer = mytokenizer, vocabulary = chiTopWords(percentage))
     else:
         vectorizer = TfidfVectorizer(tokenizer = mytokenizer)
 
@@ -304,8 +304,9 @@ def SVM(method = "original", percentage = 0):
                 lower_content = row[3].lower()
                 content = strip_markup(lower_content)
                 content = content.encode('ascii','ignore')
-                test_corpus.append(content)
-                test_label.append(current_state)
+                if len(content) != 0:
+                    test_corpus.append(content)
+                    test_label.append(current_state)
 
             except:
                 test_decode_failure_count += 1
@@ -350,6 +351,7 @@ def SVM(method = "original", percentage = 0):
 def main():
     # naiveBayes()
     result = SVM()
+    # result = SVM('chi', 50)
     print result
 
     # outputFile = open("output.txt", "w")

@@ -28,8 +28,8 @@ def extractLIW():
 
 	remove_stopwords = False
 	stem = False
-	bigram = False
-	min_word_occurence = 10
+	bigram = True
+	min_word_occurence = 10 # 10
 
 	p_stemmer = PorterStemmer()
 
@@ -118,7 +118,12 @@ def extractLIW():
 	# E = count(w) * count(s) / N
 	# chi_square[state][word] = ( O(w, s) - E )^2 / E
 
-	f_write = open('chi_LIW.json', 'w')
+	# f_write = open('AK_word_count.json', 'w')
+	# sorted_AK_word_count = sorted(data["word_count_per_state"]['AK'].items(), key=lambda x: x[1], reverse=True)
+	# json.dump(sorted_AK_word_count, f_write)
+	# f_write.close()
+
+	f_write = open('chi_LIW_bigram.json', 'w')
 	sorted_chi_square = {}
 	N = sum( data["length_per_state"].values() )
 	for state in US_state_list:
@@ -135,7 +140,9 @@ def extractLIW():
 def chiTopWords(percentage):
 
 	US_state_set = set(['WA', 'DE', 'WI', 'WV', 'HI', 'FL', 'WY', 'NH', 'KS', 'NJ', 'NM', 'TX', 'LA', 'NC', 'ND', 'NE', 'TN', 'NY', 'PA', 'RI', 'NV', 'VA', 'CO', 'CA', 'AL', 'AR', 'VT', 'IL', 'GA', 'IN', 'IA', 'MA', 'AZ', 'ID', 'CT', 'ME', 'MD', 'OK', 'OH', 'UT', 'MO', 'MN', 'MI', 'AK', 'MT', 'MS', 'SC', 'KY', 'OR', 'SD'])
-	sorted_chi_square = json.load(open('chi_LIW.json'))
+	# sorted_chi_square = json.load(open('chi_LIW.json'))
+	sorted_chi_square = json.load(open('chi_LIW_bigram.json'))
+
 
 	# count the number of total words
 	total_word_set = set()
