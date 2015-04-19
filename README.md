@@ -9,6 +9,12 @@ For Feature Selection, we implemented four methods:
 3. Heuristic-Based
 4. Local Words Selection
 
+# Usage
+    
+    python geolocation_of_blogs.py [NB|igr|tficf|chi|nl] [percentage]
+
+# description
+
 
 * geolocation_of_blogs.py
 
@@ -30,3 +36,6 @@ For Feature Selection, we implemented four methods:
 
     Program used for demo
     
+* create_new_tables.sql
+
+    Creates 3 new tables in addition to 6 original tables for preprocessing usage
