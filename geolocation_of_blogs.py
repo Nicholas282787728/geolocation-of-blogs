@@ -352,7 +352,6 @@ def SVM(method = "original", percentage = 0):
 
 def main(method,percentage):
     # naiveBayes()
-<<<<<<< HEAD
     # result = SVM()
     # result = SVM('chi', 50)
     result = SVM(method,percentage)
