@@ -88,7 +88,7 @@ def localwords_NL():
     decode_success_count = 0
     decode_failure_count = 0
 
-    with open('/media/SeagateDrive/EECS498/train.csv', 'rb') as csvfile:
+    with open('train.csv', 'rb') as csvfile:
         csv.field_size_limit(sys.maxsize)
         csvreader = csv.reader(csvfile, delimiter=',')
 	for row in csvreader:
@@ -129,16 +129,24 @@ def localwords_NL():
         for s in stopwords:
             non_localness[w] += freq_stopwords[s] * sim_SKL(w,s,prob_words,US_state_list)
 
-    #pickup words with smallest NL
+    #ranking words with their NL
     words_sorted = sorted(non_localness,key=non_localness.get,reverse=True)
-    for w in words_sorted[:50]:
+    for w in words_sorted:
         if w in stopwords:
             continue
-        if data['word_count'][w] < 50:
+        if data['word_count'][w] < 100:
             continue
         print w
     return words_sorted
 
+def nl(file_path,percentage):
+    file_path = 'ranking_NL.txt'
+    f = open(file_path)
+    words = f.readlines()
+    words = [w.strip() for w in words]
+    num = int(len(words)*perentatage)
+    return words[-num:]
     
+     
 if __name__ == '__main__':
     localwords_NL()
