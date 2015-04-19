@@ -17,3 +17,16 @@ For Feature Selection, we implemented four methods:
 * preprocess.py
 
     Filter and Split the original data into training set and testing set.
+
+* tficf.py
+
+    Return top k percent of words ranked by icf then tf in decreasing order
+    
+* chiSquareLIW.py
+
+    For each state, extract top 20 location indicative words (LIWs) using chi-squared statistcs. Words with frequency less than ten are removed.
+    
+* demo.py
+
+    Program used for demo
+    
