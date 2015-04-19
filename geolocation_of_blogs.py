@@ -277,6 +277,8 @@ def SVM(method = "original", percentage = 0):
         vectorizer = TfidfVectorizer(tokenizer = mytokenizer, vocabulary = igr('train.csv', percentage))
     elif method == 'chi':
         vectorizer = TfidfVectorizer(tokenizer = mytokenizer, vocabulary = chiTopWords(percentage))
+    elif method == 'nl':
+        vectorizer = TfidfVectorizer(tokenizer = mytokenizer, vocabulary = nl('train.csv', percentage))
     else:
         vectorizer = TfidfVectorizer(tokenizer = mytokenizer)
 
@@ -348,10 +350,12 @@ def SVM(method = "original", percentage = 0):
 
     return float(correct_count)/float(correct_count+incorrect_count)
 
-def main():
+def main(method,percentage):
     # naiveBayes()
-    result = SVM()
+<<<<<<< HEAD
+    # result = SVM()
     # result = SVM('chi', 50)
+    result = SVM(method,percentage)
     print result
 
     # outputFile = open("output.txt", "w")
@@ -365,4 +369,6 @@ def main():
 
     # outputFile.close()
 if __name__ == '__main__':
-    main()
+    method = sys.argv[1]
+    percentage = sys.argv[2]
+    main(method,percentage)
