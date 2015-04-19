@@ -125,10 +125,6 @@ def testNaiveBayes(list_of_words, class_list, metadata):
 
 
 def naiveBayes():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('input', nargs=1)
-    args = parser.parse_args()
-
     US_state_set = set(['WA', 'DE', 'WI', 'WV', 'HI', 'FL', 'WY', 'NH', 'KS', 'NJ', 'NM', 'TX', 'LA', 'NC', 'ND', 'NE', 'TN', 'NY', 'PA', 'RI', 'NV', 'VA', 'CO', 'CA', 'AL', 'AR', 'VT', 'IL', 'GA', 'IN', 'IA', 'MA', 'AZ', 'ID', 'CT', 'ME', 'MD', 'OK', 'OH', 'UT', 'MO', 'MN', 'MI', 'AK', 'MT', 'MS', 'SC', 'KY', 'OR', 'SD'])
     US_state_list = list(US_state_set)
     metadata = initializeNaiveBayes(US_state_list)
@@ -351,11 +347,19 @@ def SVM(method = "original", percentage = 0):
     return float(correct_count)/float(correct_count+incorrect_count)
 
 def main(method,percentage):
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument('input', nargs=1)
+    # args = parser.parse_args()
+
     # naiveBayes()
     # result = SVM()
     # result = SVM('chi', 50)
-    result = SVM(method,percentage)
-    print result
+
+    if method == "NB":
+        naiveBayes()
+    else:
+        result = SVM(method,percentage)
+        print result
 
     # outputFile = open("output.txt", "w")
     # outputFile.write("tficf:")
